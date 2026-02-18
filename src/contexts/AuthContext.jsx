@@ -40,21 +40,30 @@ export const AuthProvider = ({ children }) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          username: username
+        }
+      }
     })
     
     if (error) throw error
     
     if (data.user) {
-      const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase()
-      await supabase.from('users').insert({
-        id: data.user.id,
-        email,
-        username,
-        total_points: 0,
-        streak: 0,
-        level: 1,
-        invite_code: inviteCode,
-      })
+      try {
+        const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase()
+        await supabase.from('users').insert({
+          id: data.user.id,
+          email: email,
+          username: username,
+          total_points: 0,
+          streak: 0,
+          level: 1,
+          invite_code: inviteCode,
+        })
+      } catch (err) {
+        console.log('User might already exist via trigger')
+      }
     }
     
     return data
